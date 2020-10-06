@@ -1,10 +1,11 @@
 import React, { Component } from 'react';
-import axios from 'axios';
+// import axios from 'axios';
 import ImageGallery from './components/ImageGallery';
 import Searchbar from './components/SearchBar';
 import Modal from './components/Modal';
 import Button from './components/Button';
 import LoaderSpiner from './components/Loader';
+import ImagesApi from './services/ImagesApi';
 
 class App extends Component {
   state = {
@@ -23,7 +24,7 @@ class App extends Component {
 
   componentDidUpdate(prevProps, prevState) {
     if (prevState.searchQuery !== this.state.searchQuery) {
-      this.fetchPictures();
+      this.fetchImages();
     }
   }
   onChangeQuery = query => {
@@ -35,20 +36,19 @@ class App extends Component {
     });
   };
 
-  fetchPictures = () => {
-    const { currentPage, searchQuery, error } = this.state;
+  fetchImages = () => {
+    const { currentPage, searchQuery } = this.state;
+    const options = { searchQuery, currentPage };
     this.setState({ isLoading: true });
-    axios
-      .get(
-        `https://pixabay.com/api/?q=${searchQuery}&page=${currentPage}&key=18518596-31881a04385693b28c16ddbf4&image_type=photo&orientation=horizontal&per_page=12`,
-      )
+
+    ImagesApi.fetchImages(options)
       .then(response => {
         this.setState(prevState => ({
           images: [...prevState.images, ...response.data.hits],
           currentPage: prevState.currentPage + 1,
         }));
       })
-      .catch(erro => this.setState({ error }))
+      .catch(error => this.setState({ error }))
       .finally(() => {
         this.setState({ isLoading: false });
         window.scrollTo({
@@ -79,7 +79,7 @@ class App extends Component {
 
         {isLoading && <LoaderSpiner />}
         {images.length > 0 && !isLoading && (
-          <Button onButtonClick={this.fetchPictures} />
+          <Button onButtonClick={this.fetchImages} />
         )}
       </>
     );
